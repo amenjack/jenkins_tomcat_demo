@@ -1,0 +1,43 @@
+pipeline {
+    agent {
+        docker {
+            image 'openjdk:17-jdk'  // Use a Docker image with Java 17 installed
+            args '-v /opt/tomcat/webapps'  // Mount the Tomcat directory if needed
+        }
+    }
+
+    environment {
+        TOMCAT_PATH = "/opt/tomcat/webapps"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git 'https://github.com/amenjack/Insured-Assurance-App.git'
+            }
+        }
+
+        stage('Set Up Java 17') {
+            steps {
+                sh '''
+                java -version
+                '''
+            }
+        }
+
+        stage('Build Application') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Deploy to Tomcat') {
+            steps {
+                sh '''
+                cp target/*.war $TOMCAT_PATH/
+                systemctl restart tomcat
+                '''
+            }
+        }
+    }
+}
